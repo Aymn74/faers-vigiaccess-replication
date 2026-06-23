@@ -1,0 +1,7 @@
+drug,source_image,observation,year,value,note
+propranolol,assets/vigiaccess/propranolol.jpeg,total_reports_visible_in_screenshot,,38326,Manual transcription from supplied VigiAccess screenshot.
+propranolol,assets/vigiaccess/propranolol.jpeg,adr_reports_per_year_visible_table,2023,2183,Manual transcription from supplied VigiAccess screenshot.
+propranolol,assets/vigiaccess/propranolol.jpeg,adr_reports_per_year_visible_table,2024,2769,Manual transcription from supplied VigiAccess screenshot.
+propranolol,assets/vigiaccess/propranolol.jpeg,adr_reports_per_year_visible_table,2025,6589,Manual transcription from supplied VigiAccess screenshot.
+atenolol,assets/vigiaccess/atenolol.jpeg,total_reports_visible_in_screenshot,,35798,Manual transcription from supplied VigiAccess screenshot.
+metoprolol,assets/vigiaccess/metoprolol.jpeg,total_reports_visible_in_screenshot,,64612,Manual transcription from supplied VigiAccess screenshot.
