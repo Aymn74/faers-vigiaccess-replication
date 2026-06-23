@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import sys
 import time
@@ -26,6 +27,56 @@ FIELDS = {
     "openfda_generic_name": "patient.drug.openfda.generic_name",
     "medicinalproduct": "patient.drug.medicinalproduct",
 }
+VIGIACCESS_OBSERVATIONS = [
+    {
+        "drug": "propranolol",
+        "source_image": "assets/vigiaccess/propranolol.jpeg",
+        "observation": "total_reports_visible_in_screenshot",
+        "year": "",
+        "value": 38326,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+    {
+        "drug": "propranolol",
+        "source_image": "assets/vigiaccess/propranolol.jpeg",
+        "observation": "adr_reports_per_year_visible_table",
+        "year": 2023,
+        "value": 2183,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+    {
+        "drug": "propranolol",
+        "source_image": "assets/vigiaccess/propranolol.jpeg",
+        "observation": "adr_reports_per_year_visible_table",
+        "year": 2024,
+        "value": 2769,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+    {
+        "drug": "propranolol",
+        "source_image": "assets/vigiaccess/propranolol.jpeg",
+        "observation": "adr_reports_per_year_visible_table",
+        "year": 2025,
+        "value": 6589,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+    {
+        "drug": "atenolol",
+        "source_image": "assets/vigiaccess/atenolol.jpeg",
+        "observation": "total_reports_visible_in_screenshot",
+        "year": "",
+        "value": 35798,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+    {
+        "drug": "metoprolol",
+        "source_image": "assets/vigiaccess/metoprolol.jpeg",
+        "observation": "total_reports_visible_in_screenshot",
+        "year": "",
+        "value": 64612,
+        "note": "Manual transcription from supplied VigiAccess screenshot.",
+    },
+]
 
 
 def project_root() -> Path:
@@ -151,60 +202,109 @@ def write_counts_csv(
 
 
 def write_vigiaccess_observations_csv(csv_path: Path) -> None:
-    rows = [
-        {
-            "drug": "propranolol",
-            "source_image": "assets/vigiaccess/propranolol.jpeg",
-            "observation": "total_reports_visible_in_screenshot",
-            "year": "",
-            "value": 38326,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-        {
-            "drug": "propranolol",
-            "source_image": "assets/vigiaccess/propranolol.jpeg",
-            "observation": "adr_reports_per_year_visible_table",
-            "year": 2023,
-            "value": 2183,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-        {
-            "drug": "propranolol",
-            "source_image": "assets/vigiaccess/propranolol.jpeg",
-            "observation": "adr_reports_per_year_visible_table",
-            "year": 2024,
-            "value": 2769,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-        {
-            "drug": "propranolol",
-            "source_image": "assets/vigiaccess/propranolol.jpeg",
-            "observation": "adr_reports_per_year_visible_table",
-            "year": 2025,
-            "value": 6589,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-        {
-            "drug": "atenolol",
-            "source_image": "assets/vigiaccess/atenolol.jpeg",
-            "observation": "total_reports_visible_in_screenshot",
-            "year": "",
-            "value": 35798,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-        {
-            "drug": "metoprolol",
-            "source_image": "assets/vigiaccess/metoprolol.jpeg",
-            "observation": "total_reports_visible_in_screenshot",
-            "year": "",
-            "value": 64612,
-            "note": "Manual transcription from supplied VigiAccess screenshot.",
-        },
-    ]
     with csv_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(f, fieldnames=list(VIGIACCESS_OBSERVATIONS[0].keys()))
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(VIGIACCESS_OBSERVATIONS)
+
+
+def write_total_counts_csv(
+    csv_path: Path,
+    totals: dict[int, int],
+    snapshot_date: str,
+    meta_last_updated: str,
+) -> None:
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["year", "total_faers_reports", "yoy_growth_pct", "snapshot_date", "meta_last_updated"])
+        writer.writeheader()
+        for year in YEARS:
+            writer.writerow(
+                {
+                    "year": year,
+                    "total_faers_reports": totals[year],
+                    "yoy_growth_pct": "" if year == YEARS[0] else pct_growth(totals[year], totals[year - 1]),
+                    "snapshot_date": snapshot_date,
+                    "meta_last_updated": meta_last_updated,
+                }
+            )
+
+
+def write_growth_metrics_csv(
+    csv_path: Path,
+    counts: dict[tuple[str, str, int], int],
+    totals: dict[int, int],
+    snapshot_date: str,
+    meta_last_updated: str,
+) -> None:
+    total_2025_yoy = pct_growth(totals[2025], totals[2024])
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "drug",
+                "field",
+                "count_2023",
+                "count_2024",
+                "count_2025",
+                "yoy_2024_pct",
+                "yoy_2025_pct",
+                "multiplier_2025_vs_2024",
+                "multiplier_2025_vs_2023",
+                "total_faers_2025_yoy_pct",
+                "excess_2025_yoy_vs_total_faers_pct",
+                "snapshot_date",
+                "meta_last_updated",
+            ],
+        )
+        writer.writeheader()
+        for drug in DRUGS:
+            for field_label in FIELDS:
+                c2023 = counts[(drug, field_label, 2023)]
+                c2024 = counts[(drug, field_label, 2024)]
+                c2025 = counts[(drug, field_label, 2025)]
+                yoy_2025 = pct_growth(c2025, c2024)
+                writer.writerow(
+                    {
+                        "drug": drug,
+                        "field": field_label,
+                        "count_2023": c2023,
+                        "count_2024": c2024,
+                        "count_2025": c2025,
+                        "yoy_2024_pct": pct_growth(c2024, c2023),
+                        "yoy_2025_pct": yoy_2025,
+                        "multiplier_2025_vs_2024": multiplier(c2025, c2024),
+                        "multiplier_2025_vs_2023": multiplier(c2025, c2023),
+                        "total_faers_2025_yoy_pct": total_2025_yoy,
+                        "excess_2025_yoy_vs_total_faers_pct": "" if yoy_2025 is None or total_2025_yoy is None else yoy_2025 - total_2025_yoy,
+                        "snapshot_date": snapshot_date,
+                        "meta_last_updated": meta_last_updated,
+                    }
+                )
+
+
+def write_query_log_csv(csv_path: Path, query_log: list[dict[str, Any]]) -> None:
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["drug", "field", "year", "url"])
+        writer.writeheader()
+        writer.writerows(query_log)
+
+
+def write_run_metadata_json(
+    json_path: Path,
+    snapshot_date: str,
+    meta_last_updated: str,
+) -> None:
+    metadata = {
+        "snapshot_date": snapshot_date,
+        "openfda_meta_last_updated": meta_last_updated,
+        "api_endpoint": BASE_URL,
+        "date_field": "receivedate",
+        "years": YEARS,
+        "drugs": DRUGS,
+        "fields": FIELDS,
+        "interpretation_scope": "Hypothesis-generating raw spontaneous-report counts only; not incidence, risk, or causality.",
+    }
+    json_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
 
 def build_summary(
@@ -251,6 +351,34 @@ def build_summary(
         free_text = counts[(drug, "medicinalproduct", 2025)]
         gap_rows.append([drug, fmt_count(normalized), fmt_count(free_text), fmt_count(free_text - normalized)])
 
+    vigi_prop = {
+        int(item["year"]): int(item["value"])
+        for item in VIGIACCESS_OBSERVATIONS
+        if item["drug"] == "propranolol" and item["observation"] == "adr_reports_per_year_visible_table"
+    }
+    vigi_rows = [
+        [
+            "VigiAccess screenshot",
+            "propranolol",
+            fmt_count(vigi_prop[2023]),
+            fmt_count(vigi_prop[2024]),
+            fmt_count(vigi_prop[2025]),
+            fmt_pct(pct_growth(vigi_prop[2025], vigi_prop[2024])),
+            fmt_mult(multiplier(vigi_prop[2025], vigi_prop[2023])),
+            "Manual screenshot transcription",
+        ],
+        [
+            "FAERS/OpenFDA",
+            "propranolol",
+            fmt_count(counts[("propranolol", "openfda_generic_name", 2023)]),
+            fmt_count(counts[("propranolol", "openfda_generic_name", 2024)]),
+            fmt_count(counts[("propranolol", "openfda_generic_name", 2025)]),
+            fmt_pct(pct_growth(counts[("propranolol", "openfda_generic_name", 2025)], counts[("propranolol", "openfda_generic_name", 2024)])),
+            fmt_mult(multiplier(counts[("propranolol", "openfda_generic_name", 2025)], counts[("propranolol", "openfda_generic_name", 2023)])),
+            "`patient.drug.openfda.generic_name`",
+        ],
+    ]
+
     query_lines = "\n".join(f"- {item['drug']} | {item['field']} | {item['year']}: `{item['url']}`" for item in query_log)
 
     return f"""# FAERS Replication Test - Propranolol VigiAccess Spike
@@ -272,6 +400,12 @@ Supplied VigiAccess screenshots are stored in:
 - `assets/vigiaccess/metoprolol.jpeg`
 
 Manual screenshot observations are stored in `data/vigiaccess_screenshot_observations.csv`.
+
+Visible VigiAccess totals transcribed from the screenshots:
+
+- Propranolol: 38,326 total reports; visible annual table includes 2,183 in 2023, 2,769 in 2024, and 6,589 in 2025.
+- Atenolol: 35,798 total reports.
+- Metoprolol: 64,612 total reports.
 
 ## Method / المنهجية
 
@@ -300,6 +434,12 @@ Manual screenshot observations are stored in `data/vigiaccess_screenshot_observa
 
 {markdown_table(["drug", "2023", "2024", "2025", "2024 YoY", "2025 YoY", "2025/2024", "2025/2023", "2025 excess vs total FAERS"], growth_rows)}
 
+## Cross-System Spike Check / فحص القفزة بين النظامين
+
+{markdown_table(["source", "drug", "2023", "2024", "2025", "2025 YoY", "2025/2023", "basis"], vigi_rows)}
+
+This table compares the visible VigiAccess propranolol pattern with the primary normalized FAERS propranolol query. The direction differs: VigiAccess rises sharply in 2025, while FAERS decreases in 2025.
+
 ## Total FAERS Baseline / خط أساس FAERS
 
 {markdown_table(["year", "total reports", "YoY"], total_rows)}
@@ -315,6 +455,8 @@ English: In this FAERS snapshot, the VigiAccess propranolol 2025 spike does **no
 العربية: في لقطة FAERS هذه، لا تتكرر قفزة propranolol الظاهرة في VigiAccess بوضوح داخل العينة الأمريكية المستقلة. في الحقل الموحد داخل FAERS ينخفض propranolol في 2025 بينما إجمالي FAERS شبه مستقر.
 
 This does not prove absence of a safety issue; it only says that this specific raw-count spike is not reproduced in this second spontaneous-reporting system.
+
+Practical reading: this pattern is more consistent with a VigiAccess/VigiBase source-specific or reporting-process explanation than with a broad cross-system 2025 rise visible in US FAERS. This remains a descriptive database comparison, not a clinical conclusion.
 
 ## Exact API Query URLs / روابط الاستعلام
 
@@ -352,7 +494,11 @@ def run(output_root: Path) -> None:
 
     meta_last_updated = ", ".join(sorted(meta_last_updated_values)) or "unavailable"
     write_counts_csv(data_dir / "faers_betablocker_counts.csv", counts, snapshot_date, meta_last_updated)
+    write_total_counts_csv(data_dir / "faers_total_counts.csv", totals, snapshot_date, meta_last_updated)
+    write_growth_metrics_csv(data_dir / "faers_growth_metrics.csv", counts, totals, snapshot_date, meta_last_updated)
     write_vigiaccess_observations_csv(data_dir / "vigiaccess_screenshot_observations.csv")
+    write_query_log_csv(data_dir / "openfda_query_log.csv", query_log)
+    write_run_metadata_json(data_dir / "run_metadata.json", snapshot_date, meta_last_updated)
     (reports_dir / "faers_summary.md").write_text(
         build_summary(snapshot_date, meta_last_updated, counts, totals, query_log),
         encoding="utf-8",
@@ -366,7 +512,11 @@ def run(output_root: Path) -> None:
         excess = None if yoy_2025 is None or total_yoy_2025 is None else yoy_2025 - total_yoy_2025
         print(f"{drug}: 2025 YoY {fmt_pct(yoy_2025)} vs total FAERS {fmt_pct(total_yoy_2025)}; excess {fmt_pct(excess)}")
     print(f"\nWrote {data_dir / 'faers_betablocker_counts.csv'}")
+    print(f"Wrote {data_dir / 'faers_total_counts.csv'}")
+    print(f"Wrote {data_dir / 'faers_growth_metrics.csv'}")
     print(f"Wrote {data_dir / 'vigiaccess_screenshot_observations.csv'}")
+    print(f"Wrote {data_dir / 'openfda_query_log.csv'}")
+    print(f"Wrote {data_dir / 'run_metadata.json'}")
     print(f"Wrote {reports_dir / 'faers_summary.md'}")
     print(f"Snapshot date: {snapshot_date}")
     print(f"OpenFDA meta.last_updated: {meta_last_updated}")

@@ -1,0 +1,22 @@
+{
+  "snapshot_date": "2026-06-23",
+  "openfda_meta_last_updated": "2026-04-28",
+  "api_endpoint": "https://api.fda.gov/drug/event.json",
+  "date_field": "receivedate",
+  "years": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "drugs": [
+    "propranolol",
+    "atenolol",
+    "metoprolol"
+  ],
+  "fields": {
+    "openfda_generic_name": "patient.drug.openfda.generic_name",
+    "medicinalproduct": "patient.drug.medicinalproduct"
+  },
+  "interpretation_scope": "Hypothesis-generating raw spontaneous-report counts only; not incidence, risk, or causality."
+}

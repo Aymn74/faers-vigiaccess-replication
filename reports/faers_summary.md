@@ -18,6 +18,12 @@ Supplied VigiAccess screenshots are stored in:
 
 Manual screenshot observations are stored in `data/vigiaccess_screenshot_observations.csv`.
 
+Visible VigiAccess totals transcribed from the screenshots:
+
+- Propranolol: 38,326 total reports; visible annual table includes 2,183 in 2023, 2,769 in 2024, and 6,589 in 2025.
+- Atenolol: 35,798 total reports.
+- Metoprolol: 64,612 total reports.
+
 ## Method / المنهجية
 
 - API endpoint: `https://api.fda.gov/drug/event.json`
@@ -56,6 +62,15 @@ Manual screenshot observations are stored in `data/vigiaccess_screenshot_observa
 | atenolol | 3,681 | 3,472 | 3,288 | -5.7% | -5.3% | 0.95x | 0.89x | -4.4% |
 | metoprolol | 20,502 | 19,793 | 20,245 | -3.5% | +2.3% | 1.02x | 0.99x | +3.2% |
 
+## Cross-System Spike Check / فحص القفزة بين النظامين
+
+| source | drug | 2023 | 2024 | 2025 | 2025 YoY | 2025/2023 | basis |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| VigiAccess screenshot | propranolol | 2,183 | 2,769 | 6,589 | +138.0% | 3.02x | Manual screenshot transcription |
+| FAERS/OpenFDA | propranolol | 5,819 | 6,680 | 5,858 | -12.3% | 1.01x | `patient.drug.openfda.generic_name` |
+
+This table compares the visible VigiAccess propranolol pattern with the primary normalized FAERS propranolol query. The direction differs: VigiAccess rises sharply in 2025, while FAERS decreases in 2025.
+
 ## Total FAERS Baseline / خط أساس FAERS
 
 | year | total reports | YoY |
@@ -80,6 +95,8 @@ English: In this FAERS snapshot, the VigiAccess propranolol 2025 spike does **no
 العربية: في لقطة FAERS هذه، لا تتكرر قفزة propranolol الظاهرة في VigiAccess بوضوح داخل العينة الأمريكية المستقلة. في الحقل الموحد داخل FAERS ينخفض propranolol في 2025 بينما إجمالي FAERS شبه مستقر.
 
 This does not prove absence of a safety issue; it only says that this specific raw-count spike is not reproduced in this second spontaneous-reporting system.
+
+Practical reading: this pattern is more consistent with a VigiAccess/VigiBase source-specific or reporting-process explanation than with a broad cross-system 2025 rise visible in US FAERS. This remains a descriptive database comparison, not a clinical conclusion.
 
 ## Exact API Query URLs / روابط الاستعلام
 
